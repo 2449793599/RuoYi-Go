@@ -86,3 +86,12 @@ $2a$10$7JB720yubVSZvUI0rEqK/.OXv/er2A3Wb8D5jQRHXi7aO1h0gPV3a
 
 BUG修复：
 - 验证码开启时，后端未返回开启标识字段！
+```captcha_usercase.go
+c := model.CaptchaImage{
+    Code:           common.SUCCESS,
+    Uuid:           id,
+    Img:            b64s[strings.Index(b64s, ",")+1:],
+    Message:        "操作成功",
+    CaptchaEnabled: true,               TODO：这个每添加
+}
+```
