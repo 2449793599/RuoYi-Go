@@ -19,49 +19,71 @@ type WebsocketServer struct {
 }
 
 func StartWebSocket(app *iris.Application, l *zap.Logger) *WebsocketServer {
+
 	conns := make(map[string]*websocket.Conn)
+
 	ws := &WebsocketServer{
 		logger: l,
 		conns:  conns,
 	}
 
 	ws.logger.Info("websocket start")
+
 	app.Get("/websocket", websocket.Handler(ws.handlerWebsocket()))
+
 	return ws
+
 }
 
 func (this *WebsocketServer) handlerWebsocket() *neffos.Server {
+
 	ws := websocket.New(websocket.DefaultGobwasUpgrader, websocket.Events{
+
 		websocket.OnNativeMessage: func(nsConn *websocket.NSConn, msg websocket.Message) error {
+
 			this.logger.Info(fmt.Sprintf("Server got: %s from [%s]\n", msg.Body, nsConn.Conn.ID()))
 
-			//mg := websocket.Message{
+			// mg := websocket.Message{
 			//	Body:     []byte(jsonBytes),
 			//	IsNative: true,
-			//}
-			//c.Write(mg)
+			// }
+
+			// c.Write(mg)
+
 			return nil
+
 		},
 	})
 
 	ws.OnConnect = func(c *websocket.Conn) error {
+
 		this.logger.Info(fmt.Sprintf("[%s] Connected to server!\n", c.ID()))
+
 		this.conns[c.ID()] = c
 
-		//mg := websocket.Message{
+		// mg := websocket.Message{
 		//	Body:     []byte(jsonBytes),
 		//	IsNative: true,
-		//}
-		//c.Write(mg)
+		// }
+
+		// c.Write(mg)
+
 		return nil
+
 	}
+
 	ws.OnDisconnect = func(c *websocket.Conn) {
+
 		delete(this.conns, c.ID())
+
 		this.logger.Info(fmt.Sprintf("[%s] Disconnected from server\n", c.ID()))
+
 	}
+
 	ws.OnUpgradeError = func(err error) {
 		this.logger.Error("Upgrade Error: %v\n", zap.Error(err))
 	}
 
 	return ws
+
 }

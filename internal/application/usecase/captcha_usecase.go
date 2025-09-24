@@ -30,33 +30,42 @@ func NewCaptchaService(repo output.SysConfigRepository, r *cache.RedisClient, l 
 }
 
 func (this *CaptchaService) GenerateCaptchaImage() (model.CaptchaImage, error) {
+
 	// 查询验证码是否开启
 	captchaEnabled := "true"
+
 	result, err := this.repo.QueryConfigByKey("sys.account.captchaEnabled")
+
 	if err == nil {
 		captchaEnabled = result.ConfigValue
 	}
+
 	// 如果验证码未开启,直接返回
 	if captchaEnabled != "true" {
 		return model.CaptchaImage{
-			Code:         common.SUCCESS,
-			Message:      "操作成功",
+			Code:           common.SUCCESS,
+			Message:        "操作成功",
 			CaptchaEnabled: false,
 		}, nil
 	}
-	
+
 	id, b64s, a, err := captcha.GenerateCaptcha()
+
 	if err != nil {
 		this.logger.Error("生成验证码失败", zap.Error(err))
 		return model.CaptchaImage{}, err
 	}
+
 	this.redis.Set(fmt.Sprintf("%s:%v", common.CAPTCHA, id), a, time.Minute*5)
 
 	c := model.CaptchaImage{
-		Code:    common.SUCCESS,
-		Uuid:    id,
-		Img:     b64s[strings.Index(b64s, ",")+1:],
-		Message: "操作成功",
+		Code:           common.SUCCESS,
+		Uuid:           id,
+		Img:            b64s[strings.Index(b64s, ",")+1:],
+		Message:        "操作成功",
+		CaptchaEnabled: true,
 	}
+
 	return c, nil
+
 }

@@ -19,13 +19,13 @@ import (
 )
 
 type AuthService struct {
-	service      input.SysUserService
-	roleService  input.SysRoleService
-	deptService  input.SysDeptService
-	loginService input.SysLogininforService
+	service       input.SysUserService
+	roleService   input.SysRoleService
+	deptService   input.SysDeptService
+	loginService  input.SysLogininforService
 	menuService   input.SysMenuService
-	redis        *cache.RedisClient
-	logger       *zap.Logger
+	redis         *cache.RedisClient
+	logger        *zap.Logger
 	configService input.SysConfigService
 }
 
@@ -34,31 +34,43 @@ func NewAuthService(service input.SysUserService, roleService input.SysRoleServi
 }
 
 func (this *AuthService) Login(l *model.LoginRequest) (*model.LoginSuccess, error) {
+
 	// 查询验证码是否开启
 	captchaEnabled := "true"
+
 	config, err := this.configService.QueryConfigByKey("sys.account.captchaEnabled")
+
 	if err == nil {
 		captchaEnabled = config.ConfigValue
 	}
+
 	// 如果验证码已开启
 	if captchaEnabled == "true" {
+
 		v, err := this.redis.Get(fmt.Sprintf("%s:%v", common.CAPTCHA, l.Uuid))
+
 		if err != nil || v == "" {
 			return nil, fmt.Errorf("验证码错误或已失效")
 		}
+
 		this.redis.Del(fmt.Sprintf("%s:%v", common.CAPTCHA, l.Uuid))
 
 		if !strings.EqualFold(v, l.Code) {
 			return nil, fmt.Errorf("验证码错误或已失效")
 		}
+
 	}
 
 	sysUser := &model.SysUser{}
+
 	sysUser, err = this.service.QueryUserByUserName(l.Username)
+
 	if err != nil {
 		return nil, err
 	}
+
 	if sysUser.UserID == 0 {
+
 		this.loginService.AddLogininfor(&model.SysLogininfor{
 			Status:    "1",
 			UserName:  l.Username,
@@ -66,9 +78,11 @@ func (this *AuthService) Login(l *model.LoginRequest) (*model.LoginSuccess, erro
 		})
 
 		return nil, fmt.Errorf("用户名或密码错误")
+
 	}
 
 	if err = bcrypt.CompareHashAndPassword([]byte(sysUser.Password), []byte(l.Password)); err != nil {
+
 		this.loginService.AddLogininfor(&model.SysLogininfor{
 			Status:    "1",
 			UserName:  l.Username,
@@ -76,11 +90,15 @@ func (this *AuthService) Login(l *model.LoginRequest) (*model.LoginSuccess, erro
 		})
 
 		return nil, fmt.Errorf("用户名或密码错误", zap.Error(err))
+
 	}
 
 	var token = ""
+
 	token, err = ryjwt.Sign(common.USER_ID, fmt.Sprintf("%d", sysUser.UserID), 72)
+
 	if err != nil {
+
 		this.loginService.AddLogininfor(&model.SysLogininfor{
 			Status:    "1",
 			UserName:  l.Username,
@@ -88,9 +106,13 @@ func (this *AuthService) Login(l *model.LoginRequest) (*model.LoginSuccess, erro
 		})
 
 		this.logger.Error("生成token失败", zap.Error(err))
+
 		return nil, fmt.Errorf("生成token失败", zap.Error(err))
+
 	} else {
+
 		this.redis.Set(fmt.Sprintf("%s:%s", common.TOKEN, token), sysUser.UserID, 72*time.Hour)
+
 		this.service.UserLogin(sysUser)
 
 		this.loginService.AddLogininfor(&model.SysLogininfor{
@@ -104,8 +126,11 @@ func (this *AuthService) Login(l *model.LoginRequest) (*model.LoginSuccess, erro
 			Token:   token,
 			Message: "操作成功",
 		}
+
 		return loginSuccess, nil
+
 	}
+
 }
 
 func (this *AuthService) Logout(token string) error {
@@ -118,7 +143,7 @@ func (this *AuthService) Logout(token string) error {
 
 func (this *AuthService) GetInfo(loginUser *model.UserInfoStruct) (*model.UserInfoStruct, []string, []string, error) {
 	var p []string
-	
+
 	roles, err := this.roleService.QueryRolesByUserId(loginUser.UserID)
 	if err != nil {
 		this.logger.Error("QueryRolesByUserId error,", zap.Error(err))

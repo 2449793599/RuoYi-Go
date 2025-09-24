@@ -9,25 +9,32 @@ import (
 	"RuoYi-Go/di"
 	"RuoYi-Go/internal/shutdown"
 	"RuoYi-Go/pkg/config"
+
 	"os"
 )
 
 func main() {
+
 	// 加载配置
 	cfg, err := config.LoadConfig()
+
 	if err != nil {
 		os.Exit(2)
 	}
 
 	// 创建依赖注入容器
 	container, err := di.NewContainer(cfg)
+
 	if err != nil {
 		os.Exit(2)
 	}
+
 	defer container.Close()
 
 	container.InitJob()
+
 	err = container.StartServer()
+
 	if err != nil {
 		os.Exit(2)
 	}
@@ -39,4 +46,5 @@ func main() {
 			os.Exit(0)
 		},
 	)
+
 }

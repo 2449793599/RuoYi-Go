@@ -16,7 +16,7 @@ import (
 var db *gorm.DB
 
 func init() {
-	//dsn := fmt.Sprintf("%s://%s:%s@%s:%d/%s?sslmode=disable&TimeZone=Asia/Shanghai",
+	// dsn := fmt.Sprintf("%s://%s:%s@%s:%d/%s?sslmode=disable&TimeZone=Asia/Shanghai",
 	//	"postgres", "postgres", "postgresql.123456", "172.16.10.215",
 	//	5432, "postgres")
 	dsn := fmt.Sprintf("%s:%s@tcp(%s:%d)/%s?charset=utf8mb4&parseTime=True&loc=Local", "root",
@@ -37,12 +37,15 @@ func toCamelCase(s string) string {
 }
 
 func main() {
+
 	if db != nil {
+
 		config := gen.Config{
 			OutPath:      "./dao",
 			ModelPkgPath: "./model",
 			Mode:         gen.WithDefaultQuery,
 		}
+
 		config.WithJSONTagNameStrategy(func(columnName string) string {
 			return toCamelCase(columnName)
 		})
@@ -55,5 +58,7 @@ func main() {
 		g.ApplyBasic(g.GenerateAllTable()...)
 
 		g.Execute()
+
 	}
+
 }

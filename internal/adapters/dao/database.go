@@ -35,7 +35,9 @@ type DatabaseStruct struct {
 }
 
 func OpenDB(cfg config.AppConfig) (*DatabaseStruct, error) {
+
 	var err error = nil
+
 	var dialector gorm.Dialector = nil
 
 	// 创建一个默认的日志器实例，并设置输出级别为 logger.Info
@@ -52,29 +54,43 @@ func OpenDB(cfg config.AppConfig) (*DatabaseStruct, error) {
 	switch cfg.Database.DBtype {
 	case "postgresql":
 		dsn := fmt.Sprintf("%s://%s:%s@%s:%d/%s?sslmode=disable&TimeZone=Asia/Shanghai",
-			cfg.Database.DBtype, cfg.Database.User, cfg.Database.Password, cfg.Database.Host,
-			cfg.Database.Port, cfg.Database.DBName)
+			cfg.Database.DBtype,
+			cfg.Database.User,
+			cfg.Database.Password,
+			cfg.Database.Host,
+			cfg.Database.Port,
+			cfg.Database.DBName)
 		dialector = postgres.Open(dsn)
 	case "sqlite":
-		dsn := "./db/sqlite/sqlite.db" //我已经导入初始数据到sqlite文件里，放在项目上了
+		dsn := "./db/sqlite/sqlite.db" // 我已经导入初始数据到sqlite文件里，放在项目上了
 		dialector = sqlite.Open(dsn)
-	default: //mysql
+	default: // mysql
 		dsn := fmt.Sprintf("%s:%s@tcp(%s:%d)/%s?charset=utf8mb4&parseTime=True&loc=Local", cfg.Database.User,
-			cfg.Database.Password, cfg.Database.Host, cfg.Database.Port, cfg.Database.DBName)
+			cfg.Database.Password,
+			cfg.Database.Host,
+			cfg.Database.Port,
+			cfg.Database.DBName)
 		dialector = mysql.Open(dsn)
 	}
+
 	ops := &gorm.Config{}
+
 	if cfg.Log.LogLevel == zapcore.DebugLevel {
+
 		ops = &gorm.Config{
 			Logger: newLogger,
 		}
+
 	}
+
 	db, err := gorm.Open(dialector, ops)
+
 	if err != nil {
 		return nil, err
 	}
 
 	sqlDB, err := db.DB()
+
 	if err != nil {
 		return nil, err
 	}
@@ -88,53 +104,82 @@ func OpenDB(cfg config.AppConfig) (*DatabaseStruct, error) {
 
 	// 初始化自动生成的组件
 	g := Use(db)
+
 	return &DatabaseStruct{
 		db:  db,
 		Gen: g,
 	}, nil
+
 }
 
 func (ds *DatabaseStruct) CloseDB() error {
+
 	ds.mu.Lock()
 	defer ds.mu.Unlock()
 
 	if ds.db != nil {
+
 		sqlDB, err := ds.db.DB()
+
 		if err == nil {
+
 			if err := sqlDB.Close(); err == nil {
 				ds.db = nil
 			} else {
 				return err
 			}
+
 		}
+
 	}
+
 	return nil
+
 }
 
 func (ds *DatabaseStruct) Transactional(txFunc func(*gorm.DB) error) error {
+
 	ds.mu.Lock()
 	defer ds.mu.Unlock()
 
 	tx := ds.db.Begin()
+
 	if tx.Error != nil {
 		return tx.Error
 	}
+
 	defer func() {
+
 		if r := recover(); r != nil {
+
 			tx.Rollback()
+
 			panic(r)
+
 		}
+
 		if err := recover(); tx.Error != nil || err != nil {
+
 			tx.Rollback()
+
 			return
+
 		}
+
 		tx.Commit()
+
 	}()
+
 	if err := txFunc(tx); err != nil {
+
 		tx.Rollback()
+
 		return err
+
 	}
+
 	return tx.Commit().Error
+
 }
 
 func (ds *DatabaseStruct) LoginUser(user *model.SysUser) {

@@ -25,21 +25,28 @@ func NewAuthHandler(service input.AuthService, logger *zap.Logger) *AuthHandler 
 }
 
 func (h *AuthHandler) Login(ctx iris.Context) {
+
 	l := &model.LoginRequest{}
+
 	// Attempt to read and bind the JSON request body to the 'user' variable
 	if err := filter.ValidateRequest(ctx, l); err != nil {
-		//ctx.JSON(common.ErrorFormat(iris.StatusBadRequest, "Invalid JSON, error:%s", err.Error()))
+		// ctx.JSON(common.ErrorFormat(iris.StatusBadRequest, "Invalid JSON, error:%s", err.Error()))
 		return
 	}
 
 	resp, err := h.service.Login(l)
+
 	if err != nil {
-		//h.logger.Debug("login failed", zap.Error(err))
+
+		// h.logger.Debug("login failed", zap.Error(err))
 		ctx.JSON(common.ErrorFormat(iris.StatusInternalServerError, "login failed, error：%s", err.Error()))
+
 		return
+
 	}
 
 	ctx.JSON(resp)
+
 }
 
 func (h *AuthHandler) Logout(ctx iris.Context) {

@@ -7,13 +7,17 @@ package ryi18n
 
 import (
 	"github.com/nicksnyder/go-i18n/v2/i18n"
+
 	"golang.org/x/text/language"
+
 	"gopkg.in/yaml.v3"
 )
 
 // 获取Localizer实例
 func LoadLocalizer(lang string) *i18n.Localizer {
+
 	var bundle = i18n.NewBundle(language.SimplifiedChinese)
+
 	bundle.RegisterUnmarshalFunc("yaml", yaml.Unmarshal)
 
 	// 使用LoadMessageFile加载YAML文件，并检查错误
@@ -25,4 +29,5 @@ func LoadLocalizer(lang string) *i18n.Localizer {
 	} else {
 		return nil
 	}
+
 }

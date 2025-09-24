@@ -23,6 +23,7 @@ type RedisClient struct {
 }
 
 func NewRedisClient(cfg config.AppConfig, logger *zap.Logger) (*RedisClient, error) {
+
 	client := redis.NewClient(&redis.Options{
 		Addr:     fmt.Sprintf("%s:%d", cfg.Redis.Host, cfg.Redis.Port),
 		Password: cfg.Redis.Password,
@@ -31,44 +32,58 @@ func NewRedisClient(cfg config.AppConfig, logger *zap.Logger) (*RedisClient, err
 
 	// Ping Redis to check connection
 	_, err := client.Ping(context.Background()).Result()
+
 	if err != nil {
+
 		logger.Error("failed to ping redis", zap.Error(err))
+
 		return nil, err
+
 	}
 
 	return &RedisClient{client: client}, nil
+
 }
 
 // Get Redis `GET key` command. It returns redis.Nil error when key does not exist.
 func (rs *RedisClient) Get(key string) (string, error) {
+
 	rs.mu.Lock()
 	defer rs.mu.Unlock()
 
 	return rs.client.Get(context.Background(), key).Result()
+
 }
 
 func (rs *RedisClient) Set(key string, value interface{}, expiration time.Duration) error {
+
 	rs.mu.Lock()
 	defer rs.mu.Unlock()
 
 	return rs.client.Set(context.Background(), key, value, expiration).Err()
+
 }
 
 func (rs *RedisClient) SetNotTime(key string, value interface{}) error {
+
 	rs.mu.Lock()
 	defer rs.mu.Unlock()
 
 	return rs.client.Set(context.Background(), key, value, time.Hour*1).Err()
+
 }
 
 func (rs *RedisClient) Del(key string) error {
+
 	rs.mu.Lock()
 	defer rs.mu.Unlock()
 
 	return rs.client.Del(context.Background(), key).Err()
+
 }
 
 func (rs *RedisClient) CloseRedis() error {
+
 	rs.mu.Lock()
 	defer rs.mu.Unlock()
 
@@ -76,5 +91,7 @@ func (rs *RedisClient) CloseRedis() error {
 		// 关闭连接
 		return rs.client.Close()
 	}
+
 	return nil
+
 }

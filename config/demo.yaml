@@ -22,23 +22,23 @@ server:
 
 #database:
 #  dbtype: "postgresql" # 数据库类型 postgresql mysql sqlite
-#  host: "172.16.10.215" # 数据库地址
+#  host: "localhost" # 数据库地址
 #  port: 5432 # 数据库端口
 #  user: "postgres" # 数据库用户名
 #  password: "已删除" # 数据库密码
 #  dbname: "" # 数据库名称
 database:
   dbtype: "mysql" # 数据库类型 postgresql mysql sqlite
-  host: "172.16.10.215" # 数据库地址
+  host: "localhost" # 数据库地址
   port: 3306 # 数据库端口
   user: "root" # 数据库用户名
-  password: "已删除" # 数据库密码
-  dbname: "ruoyi" # 数据库名称
+  password: "123456" # 数据库密码
+  dbname: "ruoyi-go" # 数据库名称
 
 # 根据需要添加更多配置项
 redis:
-  host: "172.16.10.215"
+  host: "localhost"
   port: 6379
-  password: "Redis.123456"
+  password: ""
   db: 0
 #  max_idle_conns: 10
